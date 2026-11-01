@@ -1,0 +1,4 @@
+interface:
+  display_name: "个人股票池"
+  short_description: "维护个人股票池数据库"
+  default_prompt: "使用股票池 skill 帮我管理个人关注的股票。"
