@@ -7,9 +7,9 @@ const PAGE_SIZE = 20;
 const COMMON = { app: 'CailianpressWeb', os: 'web', sv: '8.7.9' };
 
 type Sort = 'time' | 'reads' | 'reads-per-minute';
-type RawItem = { id: number; ctime: number; title: string; content: string; reading_num: number };
+type RawItem = { id: number; ctime: number; title: string; content: string; reading_num: number; type?: number };
 type Options = { limit?: number; since?: number; sort: Sort; nowMs: number };
-type Item = { title: string | null; content: string; published_at: string; published_timestamp: number; reads: number; reads_per_minute: number | null };
+type Item = { id: number; type: number | null; title: string | null; content: string; published_at: string; published_timestamp: number; reads: number; reads_per_minute: number | null };
 
 function fail(message: string): never { throw new Error(message); }
 function sign(params: Record<string, string>): string {
@@ -97,7 +97,7 @@ export async function collect(options: Options, getPage: (cursor: number) => Pro
   const items: Item[] = raw.map(item => {
     const ageMinutes = (options.nowMs - item.ctime * 1000) / 60_000;
     if (ageMinutes <= 0) invalidAge++;
-    return { title: item.title || null, content: item.content, published_at: formatBeijing(item.ctime * 1000), published_timestamp: item.ctime, reads: item.reading_num, reads_per_minute: ageMinutes > 0 ? Math.round(item.reading_num / ageMinutes * 100) / 100 : null };
+    return { id: item.id, type: item.type ?? null, title: item.title || null, content: item.content, published_at: formatBeijing(item.ctime * 1000), published_timestamp: item.ctime, reads: item.reading_num, reads_per_minute: ageMinutes > 0 ? Math.round(item.reading_num / ageMinutes * 100) / 100 : null };
   });
   if (options.sort !== 'time') {
     const key = options.sort === 'reads' ? 'reads' : 'reads_per_minute';
