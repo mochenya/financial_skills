@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const ENDPOINT = 'https://www.cls.cn/v1/roll/get_roll_list';
 const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -136,6 +137,9 @@ async function main(): Promise<void> {
   for (const warning of result.warnings) process.stderr.write(`提示：${warning}\n`);
   process.stdout.write(`${JSON.stringify({ fetched_at: new Date(nowMs + 8 * 3600_000).toISOString().replace('T', ' ').replace('Z', '+08:00'), sort: options.sort, count: result.items.length, items: result.items }, null, 2)}\n`);
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch(error => { process.stderr.write(`错误：${error instanceof Error ? error.message : String(error)}\n`); process.exitCode = 1; });
+if (process.argv[1]) {
+  // 软链安装时 argv[1] 与 import.meta.url 的解析结果不同，按真实路径比较，否则脚本静默不执行。
+  let isEntry = false;
+  try { isEntry = realpathSync(process.argv[1]) === fileURLToPath(import.meta.url); } catch { isEntry = false; }
+  if (isEntry) main().catch(error => { process.stderr.write(`错误：${error instanceof Error ? error.message : String(error)}\n`); process.exitCode = 1; });
 }
